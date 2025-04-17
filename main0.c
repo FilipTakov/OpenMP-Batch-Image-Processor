@@ -142,8 +142,8 @@ int main(int argc, char* argv[]) {
         int output_channels = channels;
 
 
+        //Start Processing
         printf("(%d): \tLOADED (%s), processing...\n", omp_get_thread_num(), argv[i]);
-        //Processing Timing
         double start; double end;
         start = omp_get_wtime();
 
