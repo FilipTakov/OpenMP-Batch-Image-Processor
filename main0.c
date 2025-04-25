@@ -81,6 +81,66 @@ void apply_vflip(unsigned char* img, int width, int height, int channels) {
     free(flipped);
 }
 
+//Rotates image using transpose and flipping depending on rotation (90: t, hflip; 180: hflip, vflip; 270: t, vflip;)
+void apply_rotate(unsigned char* img, int width, int height, int channels, int rotation) {
+
+    switch (rotation) {
+    case 180: //180 reuses flip functions
+        apply_hflip(img, width, height, channels);
+        apply_vflip(img, width, height, channels);
+        break;
+    
+    case 90: //90 & 270 rotation requires transposing the image
+    case 270: {
+        
+        unsigned char* transposed = malloc(width * height * channels);
+        if (!transposed) {
+            fprintf(stderr, "Memory allocation failed\n");
+            return;
+        }
+        // Tile based transpose
+        const int TILE_SIZE = 64;
+#pragma omp taskloop
+        for (int tile_y = 0; tile_y < height; tile_y += TILE_SIZE) {
+            for (int tile_x = 0; tile_x < width; tile_x += TILE_SIZE) {
+                //Process each tile
+                int y_end = (tile_y + TILE_SIZE < height) ? tile_y + TILE_SIZE : height;
+                int x_end = (tile_x + TILE_SIZE < width) ? tile_x + TILE_SIZE : width;
+
+                for (int y = tile_y; y < y_end; y++) {
+                    for (int x = tile_x; x < x_end; x++) {
+                        //get source and destination positions
+                        int src_idx = channels * (y * width + x);
+                        int dst_idx = channels * (x * height + y);
+
+                        //copy all channels
+                        for (int c = 0; c < channels; c++) {
+                            transposed[dst_idx + c] = img[src_idx + c];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Apply flip based on rotation direction
+        if (rotation == 90) {
+            apply_hflip(transposed, height, width, channels);
+        }
+        else {
+            apply_vflip(transposed, height, width, channels);
+        }
+
+        memcpy(img, transposed, width * height * channels);
+        free(transposed);
+        break;
+    }
+
+    default:
+        fprintf(stderr, "ERROR: Invalid rotation value (%d). Valid values are 90, 180, 270\n", rotation);
+        return;
+    }
+}
+
 
 int main(int argc, char* argv[]) {
     //Input Validation: filenames are provided.
@@ -91,10 +151,12 @@ int main(int argc, char* argv[]) {
     
     //input sequence
     char input[16];
-    printf("Select operations (\"confirm\" to proceed):\nNote: Greyscale and Sepia are mutually exclusive.\nGreyscale: \"gs\", Sepia: \"sp\", Horizontal Flip: \"hf\", Vertical Flip: \"vf\" \n");
+    printf("Select operations (\"confirm\" to proceed):\nNote: Greyscale and Sepia are mutually exclusive.\nNote: Using rotate asks you to type a multiple of 90 degrees. Anything else cancels.\n"); 
+    printf("Greyscale: \"gs\"\nSepia: \"sp\"\nHorizontal Flip: \"hf\"\nVertical Flip: \"vf\"\n");
+    printf("Rotate n*90 degrees: \"rt\" then \"90\", \"180\", or \"270\"\n");
     
     //Operation bools
-    int greyscale = 0, hflip = 0, vflip = 0, sepia = 0;
+    int greyscale = 0, hflip = 0, vflip = 0, sepia = 0, rotate = 0, rotation = 0;
 
     //While input not "confirm", modify operation values
     while (scanf("%s", input) && strcmp(input, "confirm") != 0) {
@@ -108,8 +170,34 @@ int main(int argc, char* argv[]) {
         }
         else if (strcmp(input, "hf") == 0) hflip = !hflip;
         else if (strcmp(input, "vf") == 0) vflip = !vflip;
+        //rotation sequence
+        else if (strcmp(input, "rt") == 0) {
+            printf("Choose Available Rotation: (90), (180), (270)\n");
+            rotate = !rotate;
+            scanf("%s", input);
+            if (strcmp(input, "90") == 0) {
+                rotation = 90;
+                printf("Rotation: (%d) \n", rotation);
+            } 
+            else if (strcmp(input, "180") == 0) {
+                rotation = 180;
+                printf("Rotation: (%d) \n", rotation);
+            }
+            else if (strcmp(input, "270") == 0) {
+                rotation = 270;
+                printf("Rotation: (%d) \n", rotation);
+            }
+            else {
+                //cancels rotation
+                rotate = !rotate;
+                rotation = 0;
+                printf("Rotation Cancelled\n");
+
+            }
+
+        }
         else printf("Invalid operation.\n");
-        printf("Chosen: gs(%d), sp(%d), hf(%d), vf(%d)\n", greyscale, sepia, hflip, vflip);
+        printf("Chosen: gs(%d), sp(%d), hf(%d), vf(%d), rt(%d):%d\n", greyscale, sepia, hflip, vflip, rotate, rotation);
     }
 
     //start total timer after input
@@ -162,8 +250,15 @@ int main(int argc, char* argv[]) {
 
         if (hflip) apply_hflip(output_img, width, height, output_channels);
         if (vflip) apply_vflip(output_img, width, height, output_channels);
-
-
+        if (rotate) {
+            apply_rotate(output_img, width, height, output_channels, rotation);
+            //swaps the height and width for rotation
+            if (rotation == 90 || rotation == 270) {
+                int temp = width;
+                width = height;
+                height = temp;
+            }
+        }
 
         //Processing Timer End
         end = omp_get_wtime();
