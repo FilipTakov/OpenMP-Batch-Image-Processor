@@ -2,7 +2,7 @@
 
 
 
-## USAGE:
+## USAGE
 
 Place images into "image_input" folder. If another folder is to be desired, change the INPUT_FOLDER value in main0.c. This also applies to "image_output" and thread count.
 
@@ -21,7 +21,7 @@ Type "confirm" to proceed.
 Once done, the images will be in the output folder "image_output" if the defined variable was not changed.
 
 
-## Operations:
+## Operations
 
 Greyscale: Turns an image black and white, reducing the channel count to 1, or 2 if an alpha channel (transparency) exists.
 
@@ -44,7 +44,7 @@ Some defined variables at the top of main0.c can be changed to support the user'
 "NUM_THREADS" can be changed to adjust the number of threads the image processor uses.
 
 
-## Sample Images:
+## Sample Images
 
 Some sample images have been provided to let users try the processor.
 
