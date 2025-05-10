@@ -2,7 +2,7 @@
 
 
 
-## USAGE
+## Usage
 
 Place images into "image_input" folder. If another folder is to be desired, change the INPUT_FOLDER value in main0.c. This also applies to "image_output" and thread count.
 
