@@ -10,9 +10,11 @@ Compile using: gcc -std=c17 -Wall main0.c -o main0.o -lm
 
 Run while listing all image file names to be used as arguments: ./main0.o examplefile1.png examplefile2.jpg examplefile3.jpg
 
-Choose any image operation you would like using the terminal instructions: "gs", "sp", "hf", "vf".
+Choose any image operation you would like using the terminal instructions: "gs", "sp", "hf", "vf", "rt".
 
 Retyping the operation will deselect it. Note that greyscale and sepia are mutually exclusive, and selecting one deselects the other.
+
+If Rotate is selected, type "90", "180", "270" or "-90" to proceed with rotation. Otherwise type anything else to cancel.
 
 Type "confirm" to proceed.
 
@@ -24,6 +26,8 @@ Once done, the images will be in the output folder "image_output" if the defined
 Greyscale: Turns an image black and white, reducing the channel count to 1, or 2 if an alpha channel (transparency) exists.
 
 Sepia: Applies a sepia filter over an image.
+
+Rotate: Rotates an image by specified either 90, 180, or 270 degrees.
 
 Horizontal Flip: Horizontally mirrors an image.
 
