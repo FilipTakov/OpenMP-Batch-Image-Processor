@@ -1,6 +1,6 @@
-# CSCI-4060-Massively Parallel Programming
+# Multi-threaded Batch Image Processor
 
-
+Originally a course project in CSCI4060 Massively Parallel Programming
 
 ## Usage
 
